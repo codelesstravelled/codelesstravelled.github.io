@@ -1,0 +1,477 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Min-cut problem variations - The code less travelled</title>
+<meta name="description" content="Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network I will give a brief explanation.  Flow networks  A flow network is a directed graph, tipically used to represent situations like traffic in computer networks, fluid in pipes, current in an electrical cirtcuit, vehicles in a road network.  This graph’s edges tipcally have an associated weight known as capacity. In simple terms its defines the maximum flow that could pass by that edge.  Another important feature of these types of graphs is that they have a source node and a sink node. The source has only outgoing flow and the sink had only incoming flow.  As an example:    In this flow network the S node is the source and the T node is the sink. The numbers along the edges represent the capacities. This is a pretty simple network, we obviously could represent much more complex ones.  Minimum cut problem  The minimum cut problem consists of given a flow network divide in two parts by cutting some edges. In one of the parts it must be included the source node and, in the other one, the sink node. It is a minimum cut because you have to select the edges which summation is minimum between all the possible cuts.  Following the previous example, I marked some possible cuts. In this case the minimum cut is the one in blue which takes the edges S-A and C-T, totalling a minimum of 5.    As a side note, the minimum cut is always the same as the maximum flow of the network, in this case 5.  Minimum cut with minimum edges problem  The classical minimum cut problem could be easily solved by algorithms like Ford-Fulkerson or Edmonds–Karp. But let’s analyze a special case of this problem.  Suppose we have a pipe system and we want to determine the minimum cut for making some reparations. As the reparations include changing some pipes, we would like, if possible, to replace the least ammount of pipes.  For example, in the following network, we could find two minimum cuts: one consisting two edges: S-A and C-B, and the other one consisting of only one: B-T. In both cases the flow is 3, the minimum possible. Running a typical algorithm like Ford-Fulkerson or Edmonds-Karp could give us any of the two possible solutions.    There is a simple but effective solution to this problem. You have to transform the network capacities by the following formula:                 [C’ = C (       E       + 1) + 1]           With \(C&#39;\) the new capacity of each edge, \(C\) the old capacity and \(\vert E \vert\) the ammount of edges in the network.  Let’s look to our example with the updated capacities:    Our previous minimum cut of S-A and C-B now has a total capacity of 20. Simultaneously the B-T cut has a capacity of 19. A new and lonely minimum!  Why this formula works  Here I will detail a mathematical proof of why this formula works.  We would like to prove two things:    Our formula doesn’t convert original non minimum cuts to minimum cuts.   From all the original minimum cuts, the formula keeps the one with the fewer ammount of edges the strict minimum.   First proof From the original network, let’s consider the minimum cut has a capacity \(k\) and cuts \(n\) edges. In our transformed network this cut will have a total capacity of \(k(|E| + 1) + n\). This is because:  \[\sum_{i=0}^n C_i(|E| + 1) + 1 =\]   \[= [C_0(|E| + 1) + 1] + [C_1(|E| + 1) + 1] + ... + [C_n(|E| + 1) + 1] =\]   \[= ((C_0 + C_1 + ... + C_n) (|E| + 1)) + n =\]   \[= k (|E| + 1) + n\]   Let us now take a non minimal cut from the original network. It must have a capacity of at least \(k + 1\). Following the same reasoning as before, this cut will have a capacity of  \((k + 1)(|E| + 1) + n&#39;\) with \(n&#39;\) the edges that this cut crosses.  Let us compare the two cuts in the transformed network:  \[(k + 1)(|E| + 1) + n&#39; =\]   \[= k (|E| + 1) + (|E| + 1) + n&#39; &gt;\]   \[&gt; k (|E| + 1) + n + n&#39; &gt;\]   \[&gt; k (|E| + 1) + n\]   We are able to say that \((\vert E \vert + 1) &gt; n\) because \(n\), the amount of edges in any cut, is, at most, equal to the amount of edges \(\vert E \vert\) in the graph.  Second proof Let us consider we have a graph with two (or more) minimal cuts. First, we will consider the one that crosses fewer edges. Again we will define a capacity of \(k\) and that crosses \(n\) edges. Also, we will define another minimal cut of, logically, capacity \(k\) but with more edges: \(n + u\) with \(u\) a natural number.  Following the procedures in the first proof, we could easily concluded that the new capacities of the cuts in the transformed graph will be: \(k(\vert E \vert + 1) + n\) and \(k(\vert E \vert + 1) + (n + u)\). It is clear that the minimal cut with minimal edges from the original graph will be the strict minimal in the new graph.">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="The code less travelled">
+<meta property="og:title" content="Min-cut problem variations">
+<meta property="og:url" content="https://codelesstravelled.github.io/min-cut/graph/2021/11/23/min-cut-problem-variations.html">
+
+
+  <meta property="og:description" content="Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network I will give a brief explanation.  Flow networks  A flow network is a directed graph, tipically used to represent situations like traffic in computer networks, fluid in pipes, current in an electrical cirtcuit, vehicles in a road network.  This graph’s edges tipcally have an associated weight known as capacity. In simple terms its defines the maximum flow that could pass by that edge.  Another important feature of these types of graphs is that they have a source node and a sink node. The source has only outgoing flow and the sink had only incoming flow.  As an example:    In this flow network the S node is the source and the T node is the sink. The numbers along the edges represent the capacities. This is a pretty simple network, we obviously could represent much more complex ones.  Minimum cut problem  The minimum cut problem consists of given a flow network divide in two parts by cutting some edges. In one of the parts it must be included the source node and, in the other one, the sink node. It is a minimum cut because you have to select the edges which summation is minimum between all the possible cuts.  Following the previous example, I marked some possible cuts. In this case the minimum cut is the one in blue which takes the edges S-A and C-T, totalling a minimum of 5.    As a side note, the minimum cut is always the same as the maximum flow of the network, in this case 5.  Minimum cut with minimum edges problem  The classical minimum cut problem could be easily solved by algorithms like Ford-Fulkerson or Edmonds–Karp. But let’s analyze a special case of this problem.  Suppose we have a pipe system and we want to determine the minimum cut for making some reparations. As the reparations include changing some pipes, we would like, if possible, to replace the least ammount of pipes.  For example, in the following network, we could find two minimum cuts: one consisting two edges: S-A and C-B, and the other one consisting of only one: B-T. In both cases the flow is 3, the minimum possible. Running a typical algorithm like Ford-Fulkerson or Edmonds-Karp could give us any of the two possible solutions.    There is a simple but effective solution to this problem. You have to transform the network capacities by the following formula:                 [C’ = C (       E       + 1) + 1]           With \(C&#39;\) the new capacity of each edge, \(C\) the old capacity and \(\vert E \vert\) the ammount of edges in the network.  Let’s look to our example with the updated capacities:    Our previous minimum cut of S-A and C-B now has a total capacity of 20. Simultaneously the B-T cut has a capacity of 19. A new and lonely minimum!  Why this formula works  Here I will detail a mathematical proof of why this formula works.  We would like to prove two things:    Our formula doesn’t convert original non minimum cuts to minimum cuts.   From all the original minimum cuts, the formula keeps the one with the fewer ammount of edges the strict minimum.   First proof From the original network, let’s consider the minimum cut has a capacity \(k\) and cuts \(n\) edges. In our transformed network this cut will have a total capacity of \(k(|E| + 1) + n\). This is because:  \[\sum_{i=0}^n C_i(|E| + 1) + 1 =\]   \[= [C_0(|E| + 1) + 1] + [C_1(|E| + 1) + 1] + ... + [C_n(|E| + 1) + 1] =\]   \[= ((C_0 + C_1 + ... + C_n) (|E| + 1)) + n =\]   \[= k (|E| + 1) + n\]   Let us now take a non minimal cut from the original network. It must have a capacity of at least \(k + 1\). Following the same reasoning as before, this cut will have a capacity of  \((k + 1)(|E| + 1) + n&#39;\) with \(n&#39;\) the edges that this cut crosses.  Let us compare the two cuts in the transformed network:  \[(k + 1)(|E| + 1) + n&#39; =\]   \[= k (|E| + 1) + (|E| + 1) + n&#39; &gt;\]   \[&gt; k (|E| + 1) + n + n&#39; &gt;\]   \[&gt; k (|E| + 1) + n\]   We are able to say that \((\vert E \vert + 1) &gt; n\) because \(n\), the amount of edges in any cut, is, at most, equal to the amount of edges \(\vert E \vert\) in the graph.  Second proof Let us consider we have a graph with two (or more) minimal cuts. First, we will consider the one that crosses fewer edges. Again we will define a capacity of \(k\) and that crosses \(n\) edges. Also, we will define another minimal cut of, logically, capacity \(k\) but with more edges: \(n + u\) with \(u\) a natural number.  Following the procedures in the first proof, we could easily concluded that the new capacities of the cuts in the transformed graph will be: \(k(\vert E \vert + 1) + n\) and \(k(\vert E \vert + 1) + (n + u)\). It is clear that the minimal cut with minimal edges from the original graph will be the strict minimal in the new graph.">
+
+
+
+  <meta property="og:image" content="https://codelesstravelled.github.io/assets/images/post1header.png">
+
+
+
+
+
+  <meta property="article:published_time" content="2021-11-23T23:52:51-03:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://codelesstravelled.github.io/min-cut/graph/2021/11/23/min-cut-problem-variations.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://codelesstravelled.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="The code less travelled Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+    <link rel="stylesheet" href="/assets/css/mycss.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          The code less travelled
+          
+        </a>
+        <ul class="visible-links"></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name"></h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Min-cut problem variations">
+    <meta itemprop="description" content="Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network I will give a brief explanation.Flow networksA flow network is a directed graph, tipically used to represent situations like traffic in computer networks, fluid in pipes, current in an electrical cirtcuit, vehicles in a road network.This graph’s edges tipcally have an associated weight known as capacity. In simple terms its defines the maximum flow that could pass by that edge.Another important feature of these types of graphs is that they have a source node and a sink node. The source has only outgoing flow and the sink had only incoming flow.As an example:In this flow network the S node is the source and the T node is the sink. The numbers along the edges represent the capacities. This is a pretty simple network, we obviously could represent much more complex ones.Minimum cut problemThe minimum cut problem consists of given a flow network divide in two parts by cutting some edges. In one of the parts it must be included the source node and, in the other one, the sink node. It is a minimum cut because you have to select the edges which summation is minimum between all the possible cuts.Following the previous example, I marked some possible cuts. In this case the minimum cut is the one in blue which takes the edges S-A and C-T, totalling a minimum of 5.As a side note, the minimum cut is always the same as the maximum flow of the network, in this case 5.Minimum cut with minimum edges problemThe classical minimum cut problem could be easily solved by algorithms like Ford-Fulkerson or Edmonds–Karp. But let’s analyze a special case of this problem.Suppose we have a pipe system and we want to determine the minimum cut for making some reparations. As the reparations include changing some pipes, we would like, if possible, to replace the least ammount of pipes.For example, in the following network, we could find two minimum cuts: one consisting two edges: S-A and C-B, and the other one consisting of only one: B-T. In both cases the flow is 3, the minimum possible. Running a typical algorithm like Ford-Fulkerson or Edmonds-Karp could give us any of the two possible solutions.There is a simple but effective solution to this problem. You have to transform the network capacities by the following formula:            [C’ = C (      E      + 1) + 1]      With \(C&#39;\) the new capacity of each edge, \(C\) the old capacity and \(\vert E \vert\) the ammount of edges in the network.Let’s look to our example with the updated capacities:Our previous minimum cut of S-A and C-B now has a total capacity of 20. Simultaneously the B-T cut has a capacity of 19. A new and lonely minimum!Why this formula worksHere I will detail a mathematical proof of why this formula works.We would like to prove two things:  Our formula doesn’t convert original non minimum cuts to minimum cuts.  From all the original minimum cuts, the formula keeps the one with the fewer ammount of edges the strict minimum.First proofFrom the original network, let’s consider the minimum cut has a capacity \(k\) and cuts \(n\) edges. In our transformed network this cut will have a total capacity of \(k(|E| + 1) + n\). This is because:\[\sum_{i=0}^n C_i(|E| + 1) + 1 =\]\[= [C_0(|E| + 1) + 1] + [C_1(|E| + 1) + 1] + ... + [C_n(|E| + 1) + 1] =\]\[= ((C_0 + C_1 + ... + C_n) (|E| + 1)) + n =\]\[= k (|E| + 1) + n\]Let us now take a non minimal cut from the original network. It must have a capacity of at least \(k + 1\). Following the same reasoning as before, this cut will have a capacity of \((k + 1)(|E| + 1) + n&#39;\) with \(n&#39;\) the edges that this cut crosses.Let us compare the two cuts in the transformed network:\[(k + 1)(|E| + 1) + n&#39; =\]\[= k (|E| + 1) + (|E| + 1) + n&#39; &gt;\]\[&gt; k (|E| + 1) + n + n&#39; &gt;\]\[&gt; k (|E| + 1) + n\]We are able to say that \((\vert E \vert + 1) &gt; n\) because \(n\), the amount of edges in any cut, is, at most, equal to the amount of edges \(\vert E \vert\) in the graph.Second proofLet us consider we have a graph with two (or more) minimal cuts. First, we will consider the one that crosses fewer edges. Again we will define a capacity of \(k\) and that crosses \(n\) edges. Also, we will define another minimal cut of, logically, capacity \(k\) but with more edges: \(n + u\) with \(u\) a natural number.Following the procedures in the first proof, we could easily concluded that the new capacities of the cuts in the transformed graph will be: \(k(\vert E \vert + 1) + n\) and \(k(\vert E \vert + 1) + (n + u)\). It is clear that the minimal cut with minimal edges from the original graph will be the strict minimal in the new graph.">
+    <meta itemprop="datePublished" content="2021-11-23T23:52:51-03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Min-cut problem variations
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network I will give a brief explanation.</p>
+
+<h1 id="flow-networks">Flow networks</h1>
+
+<p>A flow network is a directed graph, tipically used to represent situations like traffic in computer networks, fluid in pipes, current in an electrical cirtcuit, vehicles in a road network.</p>
+
+<p>This graph’s edges tipcally have an associated weight known as <code class="language-plaintext highlighter-rouge">capacity</code>. In simple terms its defines the maximum <code class="language-plaintext highlighter-rouge">flow</code> that could pass by that edge.</p>
+
+<p>Another important feature of these types of graphs is that they have a <code class="language-plaintext highlighter-rouge">source</code> node and a <code class="language-plaintext highlighter-rouge">sink</code> node. The <code class="language-plaintext highlighter-rouge">source</code> has only outgoing flow and the <code class="language-plaintext highlighter-rouge">sink</code> had only incoming flow.</p>
+
+<p>As an example:</p>
+
+<p><img src="/assets/graph1.png" alt="Flow network" /></p>
+
+<p>In this flow network the <strong>S</strong> node is the source and the <strong>T</strong> node is the sink. The numbers along the edges represent the capacities. This is a pretty simple network, we obviously could represent much more complex ones.</p>
+
+<h1 id="minimum-cut-problem">Minimum cut problem</h1>
+
+<p>The minimum cut problem consists of given a flow network divide in two parts by <em>cutting</em> some edges. In one of the parts it must be included the <code class="language-plaintext highlighter-rouge">source</code> node and, in the other one, the <code class="language-plaintext highlighter-rouge">sink</code> node. It is a <strong>minimum</strong> cut because you have to select the edges which summation is minimum between all the possible cuts.</p>
+
+<p>Following the previous example, I marked some possible cuts. In this case the minimum cut is the one in blue which takes the edges S-A and C-T, totalling a minimum of 5.</p>
+
+<p><img src="/assets/graph2.png" alt="Flow network with cuts" /></p>
+
+<p>As a side note, the minimum cut is always the same as the maximum flow of the network, in this case 5.</p>
+
+<h1 id="minimum-cut-with-minimum-edges-problem">Minimum cut with minimum edges problem</h1>
+
+<p>The classical minimum cut problem could be easily solved by algorithms like Ford-Fulkerson or Edmonds–Karp. But let’s analyze a special case of this problem.</p>
+
+<p>Suppose we have a pipe system and we want to determine the minimum cut for making some reparations. As the reparations include changing some pipes, we would like, if possible, to replace the least ammount of pipes.</p>
+
+<p>For example, in the following network, we could find two minimum cuts: one consisting two edges: S-A and C-B, and the other one consisting of only one: B-T. In both cases the flow is 3, the minimum possible. Running a typical algorithm like Ford-Fulkerson or Edmonds-Karp could give us any of the two possible solutions.</p>
+
+<p><img src="/assets/graph3.png" alt="Flow network 2" /></p>
+
+<p>There is a simple but effective solution to this problem. You have to transform the network capacities by the following formula:</p>
+
+\[C' = C (|E| + 1) + 1\]
+
+<p>With \(C'\) the new capacity of each edge, \(C\) the old capacity and \(\vert E \vert\) the ammount of edges in the network.</p>
+
+<p>Let’s look to our example with the updated capacities:</p>
+
+<p><img src="/assets/graph4.png" alt="Flow network 2 updated" /></p>
+
+<p>Our previous minimum cut of S-A and C-B now has a total capacity of 20. Simultaneously the B-T cut has a capacity of 19. A new and lonely minimum!</p>
+
+<h1 id="why-this-formula-works">Why this formula works</h1>
+
+<p>Here I will detail a mathematical proof of why this formula works.</p>
+
+<p>We would like to prove two things:</p>
+<ul>
+  <li>Our formula doesn’t convert original non minimum cuts to minimum cuts.</li>
+  <li>From all the original minimum cuts, the formula keeps the one with the fewer ammount of edges the strict minimum.</li>
+</ul>
+
+<h2 id="first-proof">First proof</h2>
+<p>From the original network, let’s consider the minimum cut has a capacity \(k\) and cuts \(n\) edges. In our transformed network this cut will have a total capacity of \(k(|E| + 1) + n\). This is because:</p>
+
+<div class="math-18">\[\sum_{i=0}^n C_i(|E| + 1) + 1 =\]
+</div>
+
+<div class="math-18">\[= [C_0(|E| + 1) + 1] + [C_1(|E| + 1) + 1] + ... + [C_n(|E| + 1) + 1] =\]
+</div>
+
+<div class="math-18">\[= ((C_0 + C_1 + ... + C_n) (|E| + 1)) + n =\]
+</div>
+
+<div class="math-18">\[= k (|E| + 1) + n\]
+</div>
+
+<p>Let us now take a non minimal cut from the original network. It must have a capacity of at least \(k + 1\). Following the same reasoning as before, this cut will have a capacity of 
+\((k + 1)(|E| + 1) + n'\) with \(n'\) the edges that this cut crosses.</p>
+
+<p>Let us compare the two cuts in the transformed network:</p>
+
+<div class="math-18">\[(k + 1)(|E| + 1) + n' =\]
+</div>
+
+<div class="math-18">\[= k (|E| + 1) + (|E| + 1) + n' &gt;\]
+</div>
+
+<div class="math-18">\[&gt; k (|E| + 1) + n + n' &gt;\]
+</div>
+
+<div class="math-18">\[&gt; k (|E| + 1) + n\]
+</div>
+
+<p>We are able to say that \((\vert E \vert + 1) &gt; n\) because \(n\), the amount of edges in any cut, is, at most, equal to the amount of edges \(\vert E \vert\) in the graph.</p>
+
+<h2 id="second-proof">Second proof</h2>
+<p>Let us consider we have a graph with two (or more) minimal cuts. First, we will consider the one that crosses fewer edges. Again we will define a capacity of \(k\) and that crosses \(n\) edges. Also, we will define another minimal cut of, logically, capacity \(k\) but with more edges: \(n + u\) with \(u\) a natural number.</p>
+
+<p>Following the procedures in the first proof, we could easily concluded that the new capacities of the cuts in the transformed graph will be: \(k(\vert E \vert + 1) + n\) and \(k(\vert E \vert + 1) + (n + u)\). It is clear that the minimal cut with minimal edges from the original graph will be the strict minimal in the new graph.</p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-11-23T23:52:51-03:00">November 23, 2021</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Min-cut+problem+variations%20https%3A%2F%2Fcodelesstravelled.github.io%2Fmin-cut%2Fgraph%2F2021%2F11%2F23%2Fmin-cut-problem-variations.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fcodelesstravelled.github.io%2Fmin-cut%2Fgraph%2F2021%2F11%2F23%2Fmin-cut-problem-variations.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fcodelesstravelled.github.io%2Fmin-cut%2Fgraph%2F2021%2F11%2F23%2Fmin-cut-problem-variations.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+            
+      </div>
+    </div>
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://github.com/martinsuarezz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2021 The code less travelled. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="text/javascript"
+     src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    
+
+  </body>
+</html>
