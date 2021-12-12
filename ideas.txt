@@ -4,3 +4,5 @@
 - Juego del calamar: nash, probabilidades, simulaciones
 - Mapa - teorema 4 colores
 - CDN, por que servidores mas lejos tardan más
+- Patriot Missile Failure
+- RFC's fools day
