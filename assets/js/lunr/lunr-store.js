@@ -1,8 +1,8 @@
 var store = [{
         "title": "Min-cut problem variations",
-        "excerpt":"Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network, I will give a brief explanation. Flow networks A flow network is a directed graph, typically used to represent situations like traffic...","categories": ["min-cut","graph"],
+        "excerpt":"Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network, I will give a brief explanation. Flow networks A flow network is a directed graph, typically used to represent situations like traffic...","categories": ["min-cut","graph","graph-theory"],
         "tags": [],
-        "url": "/min-cut/graph/2021/11/23/min-cut-problem-variations.html",
+        "url": "/min-cut/graph/graph-theory/2021/11/23/min-cut-problem-variations.html",
         "teaser": "/assets/images/post1header.png"
       },{
         "title": "Solving Einstein riddle with Z3",

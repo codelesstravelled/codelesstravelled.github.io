@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-<loc>http://localhost:4000/min-cut/graph/2021/11/23/min-cut-problem-variations.html</loc>
+<loc>http://localhost:4000/min-cut/graph/graph-theory/2021/11/23/min-cut-problem-variations.html</loc>
 <lastmod>2021-11-23T23:52:51-03:00</lastmod>
 </url>
 <url>
@@ -13,5 +13,9 @@
 </url>
 <url>
 <loc>http://localhost:4000/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/google54bd81f029a7c164.html</loc>
+<lastmod>2021-12-22T15:04:58-03:00</lastmod>
 </url>
 </urlset>

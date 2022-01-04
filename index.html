@@ -87,6 +87,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="/assets/js/babylon.objFileLoader.min.js"></script>
   </head>
 
   <body class="layout--home">
@@ -105,6 +107,8 @@
     
 
 <div class="masthead">
+  <img id="header-logo" src="/assets/img/headerLogo.png" alt="logo"/>
+  <canvas id="header-canvas" touch-action="none" style="touch-action: none;" tabindex=0></canvas>
   <div class="masthead__inner-wrap">
     <div class="masthead__menu">
       <nav id="site-nav" class="greedy-nav">
@@ -114,7 +118,6 @@
           
         </a>
         
-        <object id="road-img" type="image/svg+xml" data="/assets/svg/ruta.svg"></object>
         
         <ul class="visible-links"></ul>
         
@@ -206,7 +209,7 @@
     
     <h2 class="archive__item-title no_toc" itemprop="headline">
       
-        <a href="/min-cut/graph/2021/11/23/min-cut-problem-variations.html" rel="permalink">Min-cut problem variations
+        <a href="/min-cut/graph/graph-theory/2021/11/23/min-cut-problem-variations.html" rel="permalink">Min-cut problem variations
 </a>
       
     </h2>
@@ -281,7 +284,7 @@
   </ul>
 </div>
 
-<div class="page__footer-copyright">&copy; 2021 The code less travelled. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+<div class="page__footer-copyright">&copy; 2022 The code less travelled. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
 
       </footer>
     </div>
@@ -308,6 +311,6 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/MotionPathPlugin.min.js"></script>
-    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/header.js"></script>
   </body>
 </html>
