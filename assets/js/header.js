@@ -64,17 +64,26 @@ function addGroundAnimations(scene, ground){
 const createScene = function () {
     const scene = new BABYLON.Scene(engine);
 
-    BABYLON.SceneLoader.ImportMesh("", "/assets/obj/", "OC13_7.obj", scene, function (meshes, particleSystems, skeletons) {
+    // Remove the updates from mouse movement
+    scene.skipPointerMovePicking = true;
+
+    // Remove the clear of the scene buffers as there is always geometry on screen
+    scene.autoClear = false; // Color buffer
+    scene.autoClearDepthAndStencil = false; // Depth and stencil, obviously
+    
+    BABYLON.SceneLoader.ImportMesh("", "/assets/obj/", "OC13_7_5.obj", scene, function (meshes, particleSystems, skeletons) {
         const palm = BABYLON.Mesh.MergeMeshes(meshes, true, allow32BitsIndices=true);
         const scaleSize = 0.4;
         palm.scaling = new BABYLON.Vector3(scaleSize, 1.2*scaleSize, scaleSize);
         palm.position = new BABYLON.Vector3(3, 0, 8);
         palm.rotation = new BABYLON.Vector3(-Math.PI / 2, 0, Math.PI / 2);
+        palm.doNotSyncBoundingInfo = true;
 
         const palmColor = new BABYLON.StandardMaterial("palmColor");
         palmColor.diffuseColor = new BABYLON.Color3.Teal();
         palm.material = palmColor; 
-
+        palmColor.freeze();
+        
         const palmInstances = [];
 
         for (let i = 0; i < 8; i++){
@@ -102,6 +111,7 @@ const createScene = function () {
     groundGrid.diffuseTexture.uScale = 100;
     groundGrid.diffuseTexture.vScale = 100;
     ground.material = groundGrid;
+    ground.doNotSyncBoundingInfo = true;
 
     const road = BABYLON.MeshBuilder.CreateBox("road", {width:5, height:0.1, depth: 100});
     const roadMaterial = new BABYLON.StandardMaterial("roadMaterial");
@@ -110,8 +120,9 @@ const createScene = function () {
     roadMaterial.diffuseTexture.vScale = 1;
     roadMaterial.diffuseTexture.uAng = Math.PI / 2;
     roadMaterial.diffuseTexture.vAng = Math.PI / 2;
-
+    roadMaterial.freeze();
     road.material = roadMaterial;
+    road.doNotSyncBoundingInfo = true;
 
     addGroundAnimations(scene, ground);
     addGroundAnimations(scene, road);
@@ -123,7 +134,8 @@ const createScene = function () {
 
     background.position.z = 15;
     background.position.y = 13;
-
+    background.freezeWorldMatrix();
+    background.doNotSyncBoundingInfo = true;
     
     return scene;
 };
