@@ -1,8 +1,9 @@
 const canvas = document.getElementById("header-canvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
 //canvas.addEventListener('wheel', evt => evt.preventDefault());
 
-const SPEED = 10;
+const SPEED = 15;
 
 function addPalmAnimation(scene, palm, offset=0){
     const animPalm = new BABYLON.Animation("palmAnimation", "position.z", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
@@ -61,7 +62,7 @@ function addGroundAnimations(scene, ground){
 }
 
 // Add your code here matching the playground format
-const createScene = function () {
+var createScene = function () {
     const scene = new BABYLON.Scene(engine);
 
     // Remove the updates from mouse movement
@@ -70,38 +71,43 @@ const createScene = function () {
     // Remove the clear of the scene buffers as there is always geometry on screen
     scene.autoClear = false; // Color buffer
     scene.autoClearDepthAndStencil = false; // Depth and stencil, obviously
+
+    //if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        BABYLON.SceneLoader.ImportMesh("", "/assets/obj/", "palm_2.obj", scene, function (meshes, particleSystems, skeletons) {
+            const palm = BABYLON.Mesh.MergeMeshes(meshes, true, allow32BitsIndices=true);
+            const scaleSize = 0.4;
+            palm.scaling = new BABYLON.Vector3(scaleSize, scaleSize, scaleSize);
+            palm.position = new BABYLON.Vector3(3, 0, 8);
+            palm.doNotSyncBoundingInfo = true;
     
-    BABYLON.SceneLoader.ImportMesh("", "/assets/obj/", "OC13_7_5.obj", scene, function (meshes, particleSystems, skeletons) {
-        const palm = BABYLON.Mesh.MergeMeshes(meshes, true, allow32BitsIndices=true);
-        const scaleSize = 0.4;
-        palm.scaling = new BABYLON.Vector3(scaleSize, 1.2*scaleSize, scaleSize);
-        palm.position = new BABYLON.Vector3(3, 0, 8);
-        palm.rotation = new BABYLON.Vector3(-Math.PI / 2, 0, Math.PI / 2);
-        palm.doNotSyncBoundingInfo = true;
-
-        const palmColor = new BABYLON.StandardMaterial("palmColor");
-        palmColor.diffuseColor = new BABYLON.Color3.Teal();
-        palm.material = palmColor; 
-        palmColor.freeze();
+            const palmColor = new BABYLON.StandardMaterial("palmColor");
+            palmColor.diffuseColor = new BABYLON.Color3.Teal();
+            palm.material = palmColor; 
+            palmColor.freeze();
+            
+            palm.isVisible = false;
         
-        const palmInstances = [];
+            for (let i = 0; i < 6; i++){
+                var rotation = Math.random() * Math.PI;
+                var palmInstance = palm.createInstance("palmInstance" + i);
+                palmInstance.position = new BABYLON.Vector3(-3, 0, 4);
+                palmInstance.rotation = new BABYLON.Vector3(0, rotation, 0);
+                palmInstance.doNotSyncBoundingInfo = true;
+                
+                var rotation2 = Math.random() * Math.PI;
+                var palmInstance2 = palm.createInstance("palmInstance2" + i);
+                palmInstance2.position = new BABYLON.Vector3(3, 0, 4);
+                palmInstance2.rotation = new BABYLON.Vector3(0, rotation2, 0);
+                palmInstance2.doNotSyncBoundingInfo = true;
+    
+                addPalmAnimation(scene, palmInstance, 4 * i - 1);
+                addPalmAnimation(scene, palmInstance2, 4 * i + 2);
+            }           
+        });
+    //}
 
-        for (let i = 0; i < 8; i++){
-            palmInstances[i] = palm.createInstance("palmInstance");
-            palmInstances[i].position = new BABYLON.Vector3(-3, 0, 4);
-
-            palmInstances[i + 1] = palm.createInstance("palmInstance");
-            palmInstances[i + 1].position = new BABYLON.Vector3(3, 0, 4);
-
-            addPalmAnimation(scene, palmInstances[i], 4 * i);
-            addPalmAnimation(scene, palmInstances[i + 1], 4 * i + 2);
-        }   
-        
-        addPalmAnimation(scene, palm, 9);     
-    });
-  
     const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 1.9, 3, new BABYLON.Vector3(0, 1, 0));
-    //camera.attachControl(canvas, true);
+    camera.attachControl(canvas, true);
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, -1));
     
@@ -112,7 +118,7 @@ const createScene = function () {
     groundGrid.diffuseTexture.vScale = 100;
     ground.material = groundGrid;
     ground.doNotSyncBoundingInfo = true;
-
+    
     const road = BABYLON.MeshBuilder.CreateBox("road", {width:5, height:0.1, depth: 100});
     const roadMaterial = new BABYLON.StandardMaterial("roadMaterial");
     roadMaterial.diffuseTexture = new BABYLON.Texture("/assets/img/road.png");
@@ -126,8 +132,9 @@ const createScene = function () {
 
     addGroundAnimations(scene, ground);
     addGroundAnimations(scene, road);
-
+    
     const background = BABYLON.MeshBuilder.CreateBox("background", {width: 105, height: 26, depth: 1});
+    
     const backgroundTexture = new BABYLON.StandardMaterial("groundGrid");
     backgroundTexture.diffuseTexture = new BABYLON.Texture("/assets/img/background.png");
     background.material = backgroundTexture;
@@ -136,11 +143,11 @@ const createScene = function () {
     background.position.y = 13;
     background.freezeWorldMatrix();
     background.doNotSyncBoundingInfo = true;
-    
+
     return scene;
 };
 
-const scene = createScene(); //Call the createScene function
+var scene = createScene(); //Call the createScene function
 
 function showWorldAxis(size) {
     var makeTextPlane = function(text, color, size) {
@@ -184,9 +191,9 @@ engine.runRenderLoop(function () {
     scene.render();
 });
 
+
 // Watch for browser/canvas resize events
 window.addEventListener("resize", function () {
-        
     engine.resize();
 });
 
