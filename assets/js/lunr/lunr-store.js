@@ -10,4 +10,10 @@ var store = [{
         "tags": [],
         "url": "/python/z3/riddle/2021/12/04/solving-Einstein-riddle-with-Z3.html",
         "teaser": "/assets/images/post2header.png"
+      },{
+        "title": "Planar graphs and maps",
+        "excerpt":"Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting. For example, the following is a planar graph: On the right, we have a representation without any edge crossing another. On the contrary, the following isn’t a planar graph: A...","categories": ["graph-theory"],
+        "tags": ["graph","euler","maps","graph-theory"],
+        "url": "/graph-theory/2022/01/17/Eulers-formula-and-maps.html",
+        "teaser": "/assets/images/post3header.png"
       }]

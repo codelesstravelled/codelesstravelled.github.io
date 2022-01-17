@@ -1,0 +1,575 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Planar graphs and maps - The code less travelled</title>
+<meta name="description" content="Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting.  For example, the following is a planar graph:    On the right, we have a representation without any edge crossing another.  On the contrary, the following isn’t a planar graph:    A proof that it isn’t a planar graph is the representation on the right, which shows that this graph contains a subdivision of \(K_5\). By Kuratowski’s theorem, this is not a planar graph.  As stated before, maps often can be represented by planar graphs. For this to be possible, the following conditions must be true:    All “territories” or “countries” must be contiguous. For example, an US-Alaska or Russia-Kaliningrad situation is not allowed.   The maximum amount of regions that could meet at a corner or vertex is 3. It can’t exist a 4-way border or higher. For example, the Four Corners in the US isn’t allowed in a planar representation.   With this introduction, let’s see two interesting facts about maps with their relationship to planar graphs.  4-color theorem  The 4-color theorem states that any map (following the conditions we have given) could be colored using at most 4 colors so that two adjacent territories are of a different color. It was proved originally in 1976 by Kenneth Appel and Wolfgang Haken using computers. After decades of controversy, the proof has been simplified and verified several times also using theorem proving software.  A similar theorem, the 5-color theorem, which is similar but with 5 colors has a much simpler proof that could easily be done by hand.    A map of the US using only 4 colors.  Note that both Utah and New Mexico had been painted in yellow while there is technically a border between them. This is, as we mentioned, because it can’t exist a 4-way border or higher.    The four corners    An invented map with strange borders also following the 4-color theorem.  Relationship between territories, borders and tripoints  Following Euler’s formula for planar graphs, we could establish a relationship between the number of territories, borders and tripoints (point of meeting of the boundaries of three territories).  Given Euler’s formula: \(v - e + f = \chi\)  We will consider \(v\) the number of territories, \(e\) the number of borders between any two territories and \(f\) the number of tripoints. Also, we will consider Euler characteristic \(\chi = 1\).  For example, let’s consider the map of South America. Here there are 13 different territories (12 countries and the French Guiana):    Counting the number of borders, we could find that there are 25:    So, using Euler’s formula we can find the number of tripoints:  [v - e + f = \chi]  [13 - 25 + f = 1]  [f = 13]  Let’s see if this number is correct:     Brazil - French Guiana - Suriname   Brazil - Suriname - Guyana   Brazil - Guyana - Venezuela   Brazil - Venezuela - Colombia   Brazil - Colombia - Peru   Brazil - Peru - Bolivia   Brazil - Bolivia - Paraguay   Brazil - Paraguay - Argentina   Brazil - Argentina - Uruguay   Colombia - Ecuador - Peru   Peru - Bolivia - Chile   Bolivia - Chile - Argentina   Argentina - Bolivia - Paraguay   As a side note, we used Euler characteristic of \(\chi = 1\) although for planar graphs it is \(\chi = 2\). This is because we only counted as faces \(f\) the tripoints between countries. But there is an extra face, on the outer zone of the graph.  Here we could see the 13 tripoints or faces of the graph, and a face number 14 that corresponds to the outer part of the graph:    So, as we substracted 1 from \(f\), we could also subtract 1 from \(\chi\) to maintain the Euler formula unaltered.">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="The code less travelled">
+<meta property="og:title" content="Planar graphs and maps">
+<meta property="og:url" content="http://localhost:4000/graph-theory/2022/01/17/Eulers-formula-and-maps.html">
+
+
+  <meta property="og:description" content="Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting.  For example, the following is a planar graph:    On the right, we have a representation without any edge crossing another.  On the contrary, the following isn’t a planar graph:    A proof that it isn’t a planar graph is the representation on the right, which shows that this graph contains a subdivision of \(K_5\). By Kuratowski’s theorem, this is not a planar graph.  As stated before, maps often can be represented by planar graphs. For this to be possible, the following conditions must be true:    All “territories” or “countries” must be contiguous. For example, an US-Alaska or Russia-Kaliningrad situation is not allowed.   The maximum amount of regions that could meet at a corner or vertex is 3. It can’t exist a 4-way border or higher. For example, the Four Corners in the US isn’t allowed in a planar representation.   With this introduction, let’s see two interesting facts about maps with their relationship to planar graphs.  4-color theorem  The 4-color theorem states that any map (following the conditions we have given) could be colored using at most 4 colors so that two adjacent territories are of a different color. It was proved originally in 1976 by Kenneth Appel and Wolfgang Haken using computers. After decades of controversy, the proof has been simplified and verified several times also using theorem proving software.  A similar theorem, the 5-color theorem, which is similar but with 5 colors has a much simpler proof that could easily be done by hand.    A map of the US using only 4 colors.  Note that both Utah and New Mexico had been painted in yellow while there is technically a border between them. This is, as we mentioned, because it can’t exist a 4-way border or higher.    The four corners    An invented map with strange borders also following the 4-color theorem.  Relationship between territories, borders and tripoints  Following Euler’s formula for planar graphs, we could establish a relationship between the number of territories, borders and tripoints (point of meeting of the boundaries of three territories).  Given Euler’s formula: \(v - e + f = \chi\)  We will consider \(v\) the number of territories, \(e\) the number of borders between any two territories and \(f\) the number of tripoints. Also, we will consider Euler characteristic \(\chi = 1\).  For example, let’s consider the map of South America. Here there are 13 different territories (12 countries and the French Guiana):    Counting the number of borders, we could find that there are 25:    So, using Euler’s formula we can find the number of tripoints:  [v - e + f = \chi]  [13 - 25 + f = 1]  [f = 13]  Let’s see if this number is correct:     Brazil - French Guiana - Suriname   Brazil - Suriname - Guyana   Brazil - Guyana - Venezuela   Brazil - Venezuela - Colombia   Brazil - Colombia - Peru   Brazil - Peru - Bolivia   Brazil - Bolivia - Paraguay   Brazil - Paraguay - Argentina   Brazil - Argentina - Uruguay   Colombia - Ecuador - Peru   Peru - Bolivia - Chile   Bolivia - Chile - Argentina   Argentina - Bolivia - Paraguay   As a side note, we used Euler characteristic of \(\chi = 1\) although for planar graphs it is \(\chi = 2\). This is because we only counted as faces \(f\) the tripoints between countries. But there is an extra face, on the outer zone of the graph.  Here we could see the 13 tripoints or faces of the graph, and a face number 14 that corresponds to the outer part of the graph:    So, as we substracted 1 from \(f\), we could also subtract 1 from \(\chi\) to maintain the Euler formula unaltered.">
+
+
+
+  <meta property="og:image" content="http://localhost:4000/assets/images/post3header.png">
+
+
+
+
+
+  <meta property="article:published_time" content="2022-01-17T18:00:00-03:00">
+
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/graph-theory/2022/01/17/Eulers-formula-and-maps.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "http://localhost:4000/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="The code less travelled Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+    <link rel="stylesheet" href="/assets/css/mycss.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="/assets/js/babylon.objFileLoader.min.js"></script>
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <img id="header-logo" src="/assets/img/headerLogo.png" alt="logo"/>
+  <canvas id="header-canvas" touch-action="none" style="touch-action: none;" tabindex=0></canvas>
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          The code less travelled
+          
+        </a>
+        
+        
+        <ul class="visible-links"></ul>
+        
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name"></h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Planar graphs and maps">
+    <meta itemprop="description" content="Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting.For example, the following is a planar graph:On the right, we have a representation without any edge crossing another.On the contrary, the following isn’t a planar graph:A proof that it isn’t a planar graph is the representation on the right, which shows that this graph contains a subdivision of \(K_5\). By Kuratowski’s theorem, this is not a planar graph.As stated before, maps often can be represented by planar graphs. For this to be possible, the following conditions must be true:  All “territories” or “countries” must be contiguous. For example, an US-Alaska or Russia-Kaliningrad situation is not allowed.  The maximum amount of regions that could meet at a corner or vertex is 3. It can’t exist a 4-way border or higher. For example, the Four Corners in the US isn’t allowed in a planar representation.With this introduction, let’s see two interesting facts about maps with their relationship to planar graphs.4-color theoremThe 4-color theorem states that any map (following the conditions we have given) could be colored using at most 4 colors so that two adjacent territories are of a different color. It was proved originally in 1976 by Kenneth Appel and Wolfgang Haken using computers. After decades of controversy, the proof has been simplified and verified several times also using theorem proving software.A similar theorem, the 5-color theorem, which is similar but with 5 colors has a much simpler proof that could easily be done by hand.A map of the US using only 4 colors.Note that both Utah and New Mexico had been painted in yellow while there is technically a border between them. This is, as we mentioned, because it can’t exist a 4-way border or higher.The four cornersAn invented map with strange borders also following the 4-color theorem.Relationship between territories, borders and tripointsFollowing Euler’s formula for planar graphs, we could establish a relationship between the number of territories, borders and tripoints (point of meeting of the boundaries of three territories).Given Euler’s formula:\(v - e + f = \chi\)We will consider \(v\) the number of territories, \(e\) the number of borders between any two territories and \(f\) the number of tripoints. Also, we will consider Euler characteristic \(\chi = 1\).For example, let’s consider the map of South America. Here there are 13 different territories (12 countries and the French Guiana):Counting the number of borders, we could find that there are 25:So, using Euler’s formula we can find the number of tripoints:[v - e + f = \chi][13 - 25 + f = 1][f = 13]Let’s see if this number is correct:  Brazil - French Guiana - Suriname  Brazil - Suriname - Guyana  Brazil - Guyana - Venezuela  Brazil - Venezuela - Colombia  Brazil - Colombia - Peru  Brazil - Peru - Bolivia  Brazil - Bolivia - Paraguay  Brazil - Paraguay - Argentina  Brazil - Argentina - Uruguay  Colombia - Ecuador - Peru  Peru - Bolivia - Chile  Bolivia - Chile - Argentina  Argentina - Bolivia - ParaguayAs a side note, we used Euler characteristic of \(\chi = 1\) although for planar graphs it is \(\chi = 2\). This is because we only counted as faces \(f\) the tripoints between countries. But there is an extra face, on the outer zone of the graph.Here we could see the 13 tripoints or faces of the graph, and a face number 14 that corresponds to the outer part of the graph:So, as we substracted 1 from \(f\), we could also subtract 1 from \(\chi\) to maintain the Euler formula unaltered.">
+    <meta itemprop="datePublished" content="2022-01-17T18:00:00-03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Planar graphs and maps
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting.</p>
+
+<p>For example, the following is a planar graph:</p>
+
+<p><img src="/assets/images/planar_graph1.png" alt="Countries borders" /></p>
+
+<p>On the right, we have a representation without any edge crossing another.</p>
+
+<p>On the contrary, the following isn’t a planar graph:</p>
+
+<p><img src="/assets/images/planar_graph2.png" alt="Countries borders" /></p>
+
+<p>A proof that it isn’t a planar graph is the representation on the right, which shows that this graph contains a subdivision of \(K_5\). By <a href="https://www.math.cmu.edu/~mradclif/teaching/228F16/Kuratowski.pdf">Kuratowski’s theorem</a>, this <strong>is not</strong> a planar graph.</p>
+
+<p>As stated before, maps often can be represented by planar graphs. For this to be possible, the following conditions must be true:</p>
+<ul>
+  <li>All “territories” or “countries” must be contiguous. For example, an <a href="https://en.wikipedia.org/wiki/Alaska">US-Alaska</a> or <a href="https://en.wikipedia.org/wiki/Kaliningrad_Oblast">Russia-Kaliningrad</a> situation is not allowed.</li>
+  <li>The maximum amount of regions that could meet at a corner or vertex is 3. It can’t exist a 4-way border or higher. For example, the <a href="https://en.wikipedia.org/wiki/Four_Corners">Four Corners</a> in the US isn’t allowed in a planar representation.</li>
+</ul>
+
+<p>With this introduction, let’s see two interesting facts about maps with their relationship to planar graphs.</p>
+
+<h1 id="4-color-theorem">4-color theorem</h1>
+
+<p>The 4-color theorem states that any map (following the conditions we have given) could be colored using at most 4 colors so that two adjacent territories are of a different color. It was proved originally in 1976 by Kenneth Appel and Wolfgang Haken using computers. After decades of controversy, the proof has been simplified and verified several times also using theorem proving software.</p>
+
+<p>A similar theorem, the 5-color theorem, which is similar but with 5 colors has a much simpler proof that could easily be done by hand.</p>
+
+<p><img src="/assets/images/four_colors.png" alt="Four color US map" /></p>
+
+<p><em>A map of the US using only 4 colors.</em></p>
+
+<p>Note that both Utah and New Mexico had been painted in yellow while there is technically a border between them. This is, as we mentioned, because it can’t exist a 4-way border or higher.</p>
+
+<p><img src="/assets/images/four_colors3.png" alt="Four corners" /></p>
+
+<p><em>The four corners</em></p>
+
+<p><img src="/assets/images/four_colors2.png" alt="Four color invented map" /></p>
+
+<p><em>An invented map with strange borders also following the 4-color theorem.</em></p>
+
+<h1 id="relationship-between-territories-borders-and-tripoints">Relationship between territories, borders and tripoints</h1>
+
+<p>Following Euler’s formula for planar graphs, we could establish a relationship between the number of territories, borders and tripoints (point of meeting of the boundaries of three territories).</p>
+
+<p>Given Euler’s formula:
+\(v - e + f = \chi\)</p>
+
+<p>We will consider \(v\) the number of territories, \(e\) the number of borders between any two territories and \(f\) the number of tripoints. Also, we will consider Euler characteristic \(\chi = 1\).</p>
+
+<p>For example, let’s consider the map of South America. Here there are 13 different territories (12 countries and the French Guiana):</p>
+
+<p><img src="/assets/images/countries1.png" alt="Countries borders" /></p>
+
+<p>Counting the number of borders, we could find that there are 25:</p>
+
+<p><img src="/assets/images/countries3.png" alt="Countries borders" /></p>
+
+<p>So, using Euler’s formula we can find the number of tripoints:</p>
+
+\[v - e + f = \chi\]
+
+\[13 - 25 + f = 1\]
+
+\[f = 13\]
+
+<p>Let’s see if this number is correct:</p>
+
+<ol>
+  <li>Brazil - French Guiana - Suriname</li>
+  <li>Brazil - Suriname - Guyana</li>
+  <li>Brazil - Guyana - Venezuela</li>
+  <li>Brazil - Venezuela - Colombia</li>
+  <li>Brazil - Colombia - Peru</li>
+  <li>Brazil - Peru - Bolivia</li>
+  <li>Brazil - Bolivia - Paraguay</li>
+  <li>Brazil - Paraguay - Argentina</li>
+  <li>Brazil - Argentina - Uruguay</li>
+  <li>Colombia - Ecuador - Peru</li>
+  <li>Peru - Bolivia - Chile</li>
+  <li>Bolivia - Chile - Argentina</li>
+  <li>Argentina - Bolivia - Paraguay</li>
+</ol>
+
+<p>As a side note, we used Euler characteristic of \(\chi = 1\) although for planar graphs it is \(\chi = 2\). This is because we only counted as faces \(f\) the tripoints between countries. But there is an extra face, on the outer zone of the graph.</p>
+
+<p>Here we could see the 13 <code class="language-plaintext highlighter-rouge">tripoints</code> or <code class="language-plaintext highlighter-rouge">faces</code> of the graph, and a face number 14 that corresponds to the outer part of the graph:</p>
+
+<p><img src="/assets/images/countries4.png" alt="Countries tripoints" /></p>
+
+<p>So, as we substracted 1 from \(f\), we could also subtract 1 from \(\chi\) to maintain the Euler formula unaltered.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-01-17T18:00:00-03:00">January 17, 2022</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Planar+graphs+and+maps%20http%3A%2F%2Flocalhost%3A4000%2Fgraph-theory%2F2022%2F01%2F17%2FEulers-formula-and-maps.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Fgraph-theory%2F2022%2F01%2F17%2FEulers-formula-and-maps.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2Fgraph-theory%2F2022%2F01%2F17%2FEulers-formula-and-maps.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/python/z3/riddle/2021/12/04/solving-Einstein-riddle-with-Z3.html" class="pagination--pager" title="Solving Einstein riddle with Z3
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/post2header.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/python/z3/riddle/2021/12/04/solving-Einstein-riddle-with-Z3.html" rel="permalink">Solving Einstein riddle with Z3
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Einstein’s five-houses consists, as the title says, of 5 houses. Each house has a certain color. Inside of each house, its owner has a pet, smokes a certain ...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/post1header.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/min-cut/graph/graph-theory/2021/11/23/min-cut-problem-variations.html" rel="permalink">Min-cut problem variations
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network, I will gi...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://github.com/martinsuarezz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 The code less travelled. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="text/javascript"
+     src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/MotionPathPlugin.min.js"></script>
+    <script src="/assets/js/header.js"></script>
+  </body>
+</html>
