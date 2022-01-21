@@ -1288,9 +1288,15 @@ body { display: -webkit-box; display: -ms-flexbox; display: flex; min-height: 10
 @media (min-width: 48em) { .site-title { font-size: 28px; } }
 @media (min-width: 64em) { .site-title { font-size: 34px; } }
 @media (min-width: 80em) { .site-title { font-size: 42px; } }
-.masthead { background-color: #310735; height: 400px; }
+.masthead { background-color: #310735; }
 
 .canvas-wrapper { position: relative; }
+
+.contact-list { list-style: none; }
+
+ul.contact-list li a { text-decoration: none; }
+
+.about-content { display: flex; align-items: center; justify-content: center; flex-direction: column; }
 
 #header-canvas:after { content: ''; position: absolute; z-index: 30; top: 0; left: 0; width: 100%; height: 100%; cursor: not-allowed; pointer-events: none; }
 
