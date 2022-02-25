@@ -1,0 +1,790 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Solidity storage usage - The code less travelled</title>
+<meta name="description" content="In this post, I will show how Solidity administrates the Ethereum Virtual Machine (EVM) storage. Storage operations are extremely costly so good knowledge is required to optimize gas usage.  Ethereum Virtual Machine storage    Storage on the EVM could be seen as an array of length 2^256 with each item having a size of 32 bytes.  A contract running on the EVM has extremely large storage space available. It could be seen as an array of length 2^256 with each slot having a size of 32 bytes (256 bits).  Initially, all of this space is blank. For the contract developer, it does not cost any gas to have all of this blank space available. However, when you start using this space and filling it with non 0 values, the EVM starts spending gas.  Storage usage is extremely costly on the EVM. According to the Yellow Paper these are the gas costs of saving and loading from storage alongside common operations:                 Operation       Description       Gas Cost                       ADD       Addition operation       3                 MUL       Addition operation       5                 AND       Bitwise AND operation       3                 MLOAD       Load word from memory       3                 MSTORE       Store word to memory       5                 SLOAD       Load word from storage       2000                 SSTORE       Store word to storage       20000           As you can see in the last two rows, loading and saving to storage is orders of magnitude higher than other typical operations like arithmetic operations, boolean operations, or loading and saving to memory.  Also, gas refunds are given when you destroy a contract using the SELFDESTRUCT operation or when you set a storage space to 0. This further incentivizes to use storage space as carefully as possible.  Sidenote: the amount of gas that can be refunded is capped to prevent abuses of this system.  Solitidy storage usage  Static variables  Now we will look into how Solidity uses all of the EVM available space when you develop a contract.  Statically-sized variables (everything but mappings or dynamic arrays) are stored sequentially in memory, starting from position 0x0.  Typically each variable uses a 32-byte slot. In case contiguous variables are smaller than 32 bytes Solidity will try to pack them into a slot. This follows some rules:  contract Storage {   uint128 var1 = 1;  // 0x0 lower end   uint128 var2 = 2;  // 0x0 higher end   uint128 var3 = 3;  // 0x1 }   Here var1 and var2 will be packed into the slot 0x0, while var3 will be stored at the slot 0x1.  Variables packing work by putting the first variable at the lowest position of the 32 bytes. In this case, the slot 0x0 will contain var2 in the lowest 128 bits and var3 in the highest 128 bits:     contract Storage {   uint192 var1 = 1;  // 0x0   uint128 var2 = 2;  // 0x1 lower end   uint128 var3 = 3;  // 0x1 higher end }   Here var2 could not be packed with var1 as their combined size is bigger than 256 bits. var1 will be stored at slot 0x0. var2 and var3 will be packed into the slot 0x1    contract Storage {   uint192 var1 = 1;  // 0x0   uint192 var2 = 2;  // 0x1   uint128 var3 = 3;  // 0x2 }   Here var1, var2, and var3 will be each placed in a different slot as no packing is allowed due to size limitations.    Static arrays work similarly, trying to pack lower than 256-bit variables together. However, it is not allowed to pack an array variable with another variable.  contract Storage {   uint128[3] array = [1, 2, 3];  // 0x0 - 0x1   uint128 var1 = 4;  // 0x2 }   Here the variable array will take 2 storage slots, the slot 0x0 will contain the numbers 1 and 2 and the slot 0x1 will contain the number 3. Then, in slot 0x2 the variable var1 will be placed.  Structs also try to pack their variables together and, like arrays, prevent their variables from being packed with external variables.  Dinamic-size variables  Mappings and dynamically-sized arrays follow a different behavior. The storage slots of their items are calculated using the Keccak-256 hash function.  Dynamically-sized arrays  Arrays locate their data at the position keccak256(p) with p being the slot where the array is declared.  contract Storage {   uint256 var1 = 4;  // 0x0   uint256[] array;  // 0x1 Will contain the array size }   In the previous code, the array data will start at the position keccak256(0x1) as 0x1 is the location of the array declaration. Also, it’s important to note that the position 0x1 will contain the current array size.  Mappings  Mappings work in a similar way as dynamic arrays. They locate their data at the position keccak256(k . p) with p the slot where the array is declared, k the mapping key used, and . the concatenation operation.  In contrast to dynamic arrays, the slot p where the mapping is declared is not used for saving data. However, it is necessary so two different mappings that share keys have a different hash distribution.  Bytes and strings  Bytes and strings use a particular encoding. If the bytes data/string is at most 31 bytes, Solidity will save this data into a single slot. The data will be placed in the higher-order bytes and use the lowest byte to save its length multiplied by 2.  Let’s see an example, what happens when we declare the string “hello world!”:    We have the highest bytes with the string content and the lowest byte with its length multiplied by 2, in this case, 12.  If the data is 32 bytes or longer, then the slot p where the array was declared will store length * 2 + 1. The bytes/string will be stored at keccack256(p).  The use of length * 2 for data smaller than 32 bytes and length * 2 + 1 for data larger or equal than 32 bytes allows identifying a short bytes array/string from a long bytes array/string just by looking at the lowest bit. If it is a 0 will be short, if it is a 1 will be long.  In conclusion, for a bytes/string declared at slot p:                 Bytes/string type       Size       Data location       Data length location       Last bit of p                       Short       At most 31 bytes       Highest 31 bytes of p (left aligned)       Lowest byte of p (length * 2)       0                 Long       32 bytes or more       At keccak256(p)       At p (length * 2 + 1)       1           Further reading  For further information about these topics I recommend the following lectures:  https://certora.com/blog/corruptedMemory.html https://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="The code less travelled">
+<meta property="og:title" content="Solidity storage usage">
+<meta property="og:url" content="https://codelesstravelled.github.io/ethereum/2022/01/24/Solidity-storage-usage.html">
+
+
+  <meta property="og:description" content="In this post, I will show how Solidity administrates the Ethereum Virtual Machine (EVM) storage. Storage operations are extremely costly so good knowledge is required to optimize gas usage.  Ethereum Virtual Machine storage    Storage on the EVM could be seen as an array of length 2^256 with each item having a size of 32 bytes.  A contract running on the EVM has extremely large storage space available. It could be seen as an array of length 2^256 with each slot having a size of 32 bytes (256 bits).  Initially, all of this space is blank. For the contract developer, it does not cost any gas to have all of this blank space available. However, when you start using this space and filling it with non 0 values, the EVM starts spending gas.  Storage usage is extremely costly on the EVM. According to the Yellow Paper these are the gas costs of saving and loading from storage alongside common operations:                 Operation       Description       Gas Cost                       ADD       Addition operation       3                 MUL       Addition operation       5                 AND       Bitwise AND operation       3                 MLOAD       Load word from memory       3                 MSTORE       Store word to memory       5                 SLOAD       Load word from storage       2000                 SSTORE       Store word to storage       20000           As you can see in the last two rows, loading and saving to storage is orders of magnitude higher than other typical operations like arithmetic operations, boolean operations, or loading and saving to memory.  Also, gas refunds are given when you destroy a contract using the SELFDESTRUCT operation or when you set a storage space to 0. This further incentivizes to use storage space as carefully as possible.  Sidenote: the amount of gas that can be refunded is capped to prevent abuses of this system.  Solitidy storage usage  Static variables  Now we will look into how Solidity uses all of the EVM available space when you develop a contract.  Statically-sized variables (everything but mappings or dynamic arrays) are stored sequentially in memory, starting from position 0x0.  Typically each variable uses a 32-byte slot. In case contiguous variables are smaller than 32 bytes Solidity will try to pack them into a slot. This follows some rules:  contract Storage {   uint128 var1 = 1;  // 0x0 lower end   uint128 var2 = 2;  // 0x0 higher end   uint128 var3 = 3;  // 0x1 }   Here var1 and var2 will be packed into the slot 0x0, while var3 will be stored at the slot 0x1.  Variables packing work by putting the first variable at the lowest position of the 32 bytes. In this case, the slot 0x0 will contain var2 in the lowest 128 bits and var3 in the highest 128 bits:     contract Storage {   uint192 var1 = 1;  // 0x0   uint128 var2 = 2;  // 0x1 lower end   uint128 var3 = 3;  // 0x1 higher end }   Here var2 could not be packed with var1 as their combined size is bigger than 256 bits. var1 will be stored at slot 0x0. var2 and var3 will be packed into the slot 0x1    contract Storage {   uint192 var1 = 1;  // 0x0   uint192 var2 = 2;  // 0x1   uint128 var3 = 3;  // 0x2 }   Here var1, var2, and var3 will be each placed in a different slot as no packing is allowed due to size limitations.    Static arrays work similarly, trying to pack lower than 256-bit variables together. However, it is not allowed to pack an array variable with another variable.  contract Storage {   uint128[3] array = [1, 2, 3];  // 0x0 - 0x1   uint128 var1 = 4;  // 0x2 }   Here the variable array will take 2 storage slots, the slot 0x0 will contain the numbers 1 and 2 and the slot 0x1 will contain the number 3. Then, in slot 0x2 the variable var1 will be placed.  Structs also try to pack their variables together and, like arrays, prevent their variables from being packed with external variables.  Dinamic-size variables  Mappings and dynamically-sized arrays follow a different behavior. The storage slots of their items are calculated using the Keccak-256 hash function.  Dynamically-sized arrays  Arrays locate their data at the position keccak256(p) with p being the slot where the array is declared.  contract Storage {   uint256 var1 = 4;  // 0x0   uint256[] array;  // 0x1 Will contain the array size }   In the previous code, the array data will start at the position keccak256(0x1) as 0x1 is the location of the array declaration. Also, it’s important to note that the position 0x1 will contain the current array size.  Mappings  Mappings work in a similar way as dynamic arrays. They locate their data at the position keccak256(k . p) with p the slot where the array is declared, k the mapping key used, and . the concatenation operation.  In contrast to dynamic arrays, the slot p where the mapping is declared is not used for saving data. However, it is necessary so two different mappings that share keys have a different hash distribution.  Bytes and strings  Bytes and strings use a particular encoding. If the bytes data/string is at most 31 bytes, Solidity will save this data into a single slot. The data will be placed in the higher-order bytes and use the lowest byte to save its length multiplied by 2.  Let’s see an example, what happens when we declare the string “hello world!”:    We have the highest bytes with the string content and the lowest byte with its length multiplied by 2, in this case, 12.  If the data is 32 bytes or longer, then the slot p where the array was declared will store length * 2 + 1. The bytes/string will be stored at keccack256(p).  The use of length * 2 for data smaller than 32 bytes and length * 2 + 1 for data larger or equal than 32 bytes allows identifying a short bytes array/string from a long bytes array/string just by looking at the lowest bit. If it is a 0 will be short, if it is a 1 will be long.  In conclusion, for a bytes/string declared at slot p:                 Bytes/string type       Size       Data location       Data length location       Last bit of p                       Short       At most 31 bytes       Highest 31 bytes of p (left aligned)       Lowest byte of p (length * 2)       0                 Long       32 bytes or more       At keccak256(p)       At p (length * 2 + 1)       1           Further reading  For further information about these topics I recommend the following lectures:  https://certora.com/blog/corruptedMemory.html https://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html">
+
+
+
+  <meta property="og:image" content="https://codelesstravelled.github.io/assets/images/post4header.png">
+
+
+
+
+
+  <meta property="article:published_time" content="2022-01-24T00:00:00-03:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://codelesstravelled.github.io/ethereum/2022/01/24/Solidity-storage-usage.html">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://codelesstravelled.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="The code less travelled Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+    <link rel="stylesheet" href="/assets/css/mycss.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="/assets/js/babylon.objFileLoader.min.js"></script>
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <a href="/">
+    <img id="header-logo" src="/assets/img/headerLogo.png" alt="logo"/>
+  </a>
+  <canvas id="header-canvas" touch-action="none" style="touch-action: none;" tabindex=0></canvas>
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/">Home</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about.html">About</a>
+            </li></ul>
+        
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name"></h3>
+    
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Solidity storage usage">
+    <meta itemprop="description" content="In this post, I will show how Solidity administrates the Ethereum Virtual Machine (EVM) storage. Storage operations are extremely costly so good knowledge is required to optimize gas usage.Ethereum Virtual Machine storageStorage on the EVM could be seen as an array of length 2^256 with each item having a size of 32 bytes.A contract running on the EVM has extremely large storage space available. It could be seen as an array of length2^256 with each slot having a size of 32 bytes (256 bits).Initially, all of this space is blank. For the contract developer, it does not cost any gas to have all of this blank spaceavailable. However, when you start using this space and filling it with non 0 values, the EVM starts spending gas.Storage usage is extremely costly on the EVM. According to the Yellow Paperthese are the gas costs of saving and loading from storage alongside common operations:            Operation      Description      Gas Cost                  ADD      Addition operation      3              MUL      Addition operation      5              AND      Bitwise AND operation      3              MLOAD      Load word from memory      3              MSTORE      Store word to memory      5              SLOAD      Load word from storage      2000              SSTORE      Store word to storage      20000      As you can see in the last two rows, loading and saving to storage is orders of magnitude higher than other typical operationslike arithmetic operations, boolean operations, or loading and saving to memory.Also, gas refunds are given when you destroy a contract using the SELFDESTRUCT operation or when you set a storage space to 0.This further incentivizes to use storage space as carefully as possible.Sidenote: the amount of gas that can be refunded is capped to prevent abuses of this system.Solitidy storage usageStatic variablesNow we will look into how Solidity uses all of the EVM available space when you develop a contract.Statically-sized variables (everything but mappings or dynamic arrays) are stored sequentially in memory, starting from position 0x0.Typically each variable uses a 32-byte slot. In case contiguous variables are smaller than 32 bytes Solidity will try to pack theminto a slot. This follows some rules:contract Storage {  uint128 var1 = 1;  // 0x0 lower end  uint128 var2 = 2;  // 0x0 higher end  uint128 var3 = 3;  // 0x1}Here var1 and var2 will be packed into the slot 0x0, while var3 will be stored at the slot 0x1.Variables packing work by putting the first variable at the lowest position of the 32 bytes. In this case, the slot 0x0will contain var2 in the lowest 128 bits and var3 in the highest 128 bits:contract Storage {  uint192 var1 = 1;  // 0x0  uint128 var2 = 2;  // 0x1 lower end  uint128 var3 = 3;  // 0x1 higher end}Here var2 could not be packed with var1 as their combined size is bigger than 256 bits. var1 will bestored at slot 0x0. var2 and var3 will be packed into the slot 0x1contract Storage {  uint192 var1 = 1;  // 0x0  uint192 var2 = 2;  // 0x1  uint128 var3 = 3;  // 0x2}Here var1, var2, and var3 will be each placed in a different slot as no packing is allowed due to size limitations.Static arrays work similarly, trying to pack lower than 256-bit variables together. However, it is not allowed to pack an arrayvariable with another variable.contract Storage {  uint128[3] array = [1, 2, 3];  // 0x0 - 0x1  uint128 var1 = 4;  // 0x2}Here the variable array will take 2 storage slots, the slot 0x0 will contain the numbers 1 and 2 and the slot 0x1 will contain the number 3.Then, in slot 0x2 the variable var1 will be placed.Structs also try to pack their variables together and, like arrays, prevent their variables from being packed with external variables.Dinamic-size variablesMappings and dynamically-sized arrays follow a different behavior. The storage slots of their items are calculated using the Keccak-256 hash function.Dynamically-sized arraysArrays locate their data at the position keccak256(p) with p being the slot where the array is declared.contract Storage {  uint256 var1 = 4;  // 0x0  uint256[] array;  // 0x1 Will contain the array size}In the previous code, the array data will start at the position keccak256(0x1) as 0x1 is the location of the array declaration. Also, it’s important to note that the position 0x1 will contain the current array size.MappingsMappings work in a similar way as dynamic arrays. They locate their data at the position keccak256(k . p) with p the slot where the array is declared, k the mapping key used, and . the concatenation operation.In contrast to dynamic arrays, the slot p where the mapping is declared is not used for saving data. However, it is necessary so two different mappings that share keys have a different hash distribution.Bytes and stringsBytes and strings use a particular encoding. If the bytes data/string is at most 31 bytes, Solidity will save this data into a single slot. The data will be placed in the higher-order bytes and use the lowest byte to save its length multiplied by 2.Let’s see an example, what happens when we declare the string “hello world!”:We have the highest bytes with the string content and the lowest byte with its length multiplied by 2, in this case, 12.If the data is 32 bytes or longer, then the slot p where the array was declared will store length * 2 + 1. The bytes/string will be stored at keccack256(p).The use of length * 2 for data smaller than 32 bytes and length * 2 + 1 for data larger or equal than 32 bytes allows identifying a short bytes array/string from a long bytes array/string just by looking at the lowest bit. If it is a 0 will be short, if it is a 1 will be long.In conclusion, for a bytes/string declared at slot p:            Bytes/string type      Size      Data location      Data length location      Last bit of p                  Short      At most 31 bytes      Highest 31 bytes of p (left aligned)      Lowest byte of p (length * 2)      0              Long      32 bytes or more      At keccak256(p)      At p (length * 2 + 1)      1      Further readingFor further information about these topics I recommend the following lectures:https://certora.com/blog/corruptedMemory.htmlhttps://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html">
+    <meta itemprop="datePublished" content="2022-01-24T00:00:00-03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Solidity storage usage
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>In this post, I will show how Solidity administrates the Ethereum Virtual Machine (EVM) storage. Storage operations are extremely costly so good knowledge is required to optimize gas usage.</p>
+
+<h1 id="ethereum-virtual-machine-storage">Ethereum Virtual Machine storage</h1>
+
+<p><img src="/assets/images/storage_evm.png" alt="EVM Storage" /></p>
+
+<p><em>Storage on the EVM could be seen as an array of length 2^256 with each item having a size of 32 bytes.</em></p>
+
+<p>A contract running on the EVM has extremely large storage space available. It could be seen as an array of length
+2^256 with each slot having a size of 32 bytes (256 bits).</p>
+
+<p>Initially, all of this space is blank. For the contract developer, it does not cost any gas to have all of this blank space
+available. However, when you start using this space and filling it with non 0 values, the EVM starts spending gas.</p>
+
+<p>Storage usage is <strong>extremely costly</strong> on the EVM. According to the <a href="https://ethereum.github.io/yellowpaper/paper.pdf">Yellow Paper</a>
+these are the gas costs of saving and loading from storage alongside common operations:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Operation</th>
+      <th>Description</th>
+      <th>Gas Cost</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ADD</td>
+      <td>Addition operation</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>MUL</td>
+      <td>Addition operation</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>AND</td>
+      <td>Bitwise AND operation</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>MLOAD</td>
+      <td>Load word from memory</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>MSTORE</td>
+      <td>Store word to memory</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td><strong>SLOAD</strong></td>
+      <td><strong>Load word from storage</strong></td>
+      <td><strong>2000</strong></td>
+    </tr>
+    <tr>
+      <td><strong>SSTORE</strong></td>
+      <td><strong>Store word to storage</strong></td>
+      <td><strong>20000</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>As you can see in the last two rows, loading and saving to storage is orders of magnitude higher than other typical operations
+like arithmetic operations, boolean operations, or loading and saving to memory.</p>
+
+<p>Also, gas refunds are given when you destroy a contract using the SELFDESTRUCT operation or when you set a storage space to 0.
+This further incentivizes to <strong>use storage space as carefully as possible</strong>.</p>
+
+<p><em>Sidenote: the amount of gas that can be refunded is capped to prevent abuses of this system.</em></p>
+
+<h1 id="solitidy-storage-usage">Solitidy storage usage</h1>
+
+<h2 id="static-variables">Static variables</h2>
+
+<p>Now we will look into how Solidity uses all of the EVM available space when you develop a contract.</p>
+
+<p>Statically-sized variables (everything but mappings or dynamic arrays) are stored sequentially in memory, starting from position <code class="language-plaintext highlighter-rouge">0x0</code>.</p>
+
+<p>Typically each variable uses a 32-byte slot. In case contiguous variables are smaller than 32 bytes Solidity will try to pack them
+into a slot. This follows some rules:</p>
+
+<div class="language-solidity highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">contract</span> <span class="n">Storage</span> <span class="p">{</span>
+  <span class="kt">uint128</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">// 0x0 lower end
+</span>  <span class="kt">uint128</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>  <span class="c1">// 0x0 higher end
+</span>  <span class="kt">uint128</span> <span class="n">var3</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>  <span class="c1">// 0x1
+</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here <code class="language-plaintext highlighter-rouge">var1</code> and <code class="language-plaintext highlighter-rouge">var2</code> will be packed into the slot <code class="language-plaintext highlighter-rouge">0x0</code>, while <code class="language-plaintext highlighter-rouge">var3</code> will be stored at the slot <code class="language-plaintext highlighter-rouge">0x1</code>.</p>
+
+<p>Variables packing work by putting the first variable at the lowest position of the 32 bytes. In this case, the slot <code class="language-plaintext highlighter-rouge">0x0</code>
+will contain <code class="language-plaintext highlighter-rouge">var2</code> in the lowest 128 bits and <code class="language-plaintext highlighter-rouge">var3</code> in the highest 128 bits:
+<img src="/assets/images/storage_packed.png" alt="Packed Storage" /></p>
+
+<hr />
+
+<div class="language-solidity highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">contract</span> <span class="n">Storage</span> <span class="p">{</span>
+  <span class="kt">uint192</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">// 0x0
+</span>  <span class="kt">uint128</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>  <span class="c1">// 0x1 lower end
+</span>  <span class="kt">uint128</span> <span class="n">var3</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>  <span class="c1">// 0x1 higher end
+</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here <code class="language-plaintext highlighter-rouge">var2</code> could not be packed with <code class="language-plaintext highlighter-rouge">var1</code> as their combined size is bigger than 256 bits. <code class="language-plaintext highlighter-rouge">var1</code> will be
+stored at slot <code class="language-plaintext highlighter-rouge">0x0</code>. <code class="language-plaintext highlighter-rouge">var2</code> and <code class="language-plaintext highlighter-rouge">var3</code> will be packed into the slot <code class="language-plaintext highlighter-rouge">0x1</code></p>
+
+<hr />
+
+<div class="language-solidity highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">contract</span> <span class="n">Storage</span> <span class="p">{</span>
+  <span class="kt">uint192</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">// 0x0
+</span>  <span class="kt">uint192</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>  <span class="c1">// 0x1
+</span>  <span class="kt">uint128</span> <span class="n">var3</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>  <span class="c1">// 0x2
+</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here <code class="language-plaintext highlighter-rouge">var1</code>, <code class="language-plaintext highlighter-rouge">var2</code>, and <code class="language-plaintext highlighter-rouge">var3</code> will be each placed in a different slot as no packing is allowed due to size limitations.</p>
+
+<hr />
+
+<p>Static arrays work similarly, trying to pack lower than 256-bit variables together. However, it is not allowed to pack an array
+variable with another variable.</p>
+
+<div class="language-solidity highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">contract</span> <span class="n">Storage</span> <span class="p">{</span>
+  <span class="kt">uint128</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="n">array</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>  <span class="c1">// 0x0 - 0x1
+</span>  <span class="kt">uint128</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>  <span class="c1">// 0x2
+</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here the variable <code class="language-plaintext highlighter-rouge">array</code> will take 2 storage slots, the slot <code class="language-plaintext highlighter-rouge">0x0</code> will contain the numbers 1 and 2 and the slot <code class="language-plaintext highlighter-rouge">0x1</code> will contain the number 3.
+Then, in slot <code class="language-plaintext highlighter-rouge">0x2</code> the variable var1 will be placed.</p>
+
+<p>Structs also try to pack their variables together and, like arrays, prevent their variables from being packed with external variables.</p>
+
+<h2 id="dinamic-size-variables">Dinamic-size variables</h2>
+
+<p>Mappings and dynamically-sized arrays follow a different behavior. The storage slots of their items are calculated using the Keccak-256 hash function.</p>
+
+<h3 id="dynamically-sized-arrays">Dynamically-sized arrays</h3>
+
+<p>Arrays locate their data at the position <code class="language-plaintext highlighter-rouge">keccak256(p)</code> with <code class="language-plaintext highlighter-rouge">p</code> being the slot where the array is declared.</p>
+
+<div class="language-solidity highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">contract</span> <span class="n">Storage</span> <span class="p">{</span>
+  <span class="kt">uint256</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>  <span class="c1">// 0x0
+</span>  <span class="kt">uint256</span><span class="p">[]</span> <span class="n">array</span><span class="p">;</span>  <span class="c1">// 0x1 Will contain the array size
+</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>In the previous code, the array data will start at the position <code class="language-plaintext highlighter-rouge">keccak256(0x1)</code> as <code class="language-plaintext highlighter-rouge">0x1</code> is the location of the array declaration. Also, it’s important to note that the position <code class="language-plaintext highlighter-rouge">0x1</code> will contain the current array size.</p>
+
+<h3 id="mappings">Mappings</h3>
+
+<p>Mappings work in a similar way as dynamic arrays. They locate their data at the position <code class="language-plaintext highlighter-rouge">keccak256(k . p)</code> with <code class="language-plaintext highlighter-rouge">p</code> the slot where the array is declared, <code class="language-plaintext highlighter-rouge">k</code> the mapping key used, and <code class="language-plaintext highlighter-rouge">.</code> the concatenation operation.</p>
+
+<p>In contrast to dynamic arrays, the slot <code class="language-plaintext highlighter-rouge">p</code> where the mapping is declared is not used for saving data. However, it is necessary so two different mappings that share keys have a different hash distribution.</p>
+
+<h2 id="bytes-and-strings">Bytes and strings</h2>
+
+<p>Bytes and strings use a particular encoding. If the bytes data/string is at most 31 bytes, Solidity will save this data into a single slot. The data will be placed in the higher-order bytes and use the lowest byte to save its length multiplied by 2.</p>
+
+<p>Let’s see an example, what happens when we declare the string “hello world!”:</p>
+
+<p><img src="/assets/images/encoding_bytes.png" alt="String encoding" /></p>
+
+<p>We have the highest bytes with the string content and the lowest byte with its length multiplied by 2, in this case, 12.</p>
+
+<p>If the data is 32 bytes or longer, then the slot <code class="language-plaintext highlighter-rouge">p</code> where the array was declared will store <code class="language-plaintext highlighter-rouge">length * 2 + 1</code>. The bytes/string will be stored at <code class="language-plaintext highlighter-rouge">keccack256(p)</code>.</p>
+
+<p>The use of <code class="language-plaintext highlighter-rouge">length * 2</code> for data smaller than 32 bytes and <code class="language-plaintext highlighter-rouge">length * 2 + 1</code> for data larger or equal than 32 bytes allows identifying a short bytes array/string from a long bytes array/string just by looking at the lowest bit. If it is a 0 will be short, if it is a 1 will be long.</p>
+
+<p>In conclusion, for a bytes/string declared at slot <code class="language-plaintext highlighter-rouge">p</code>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Bytes/string type</th>
+      <th>Size</th>
+      <th>Data location</th>
+      <th>Data length location</th>
+      <th>Last bit of <code class="language-plaintext highlighter-rouge">p</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Short</td>
+      <td>At most 31 bytes</td>
+      <td>Highest 31 bytes of <code class="language-plaintext highlighter-rouge">p</code> (left aligned)</td>
+      <td>Lowest byte of <code class="language-plaintext highlighter-rouge">p</code> (length * 2)</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Long</td>
+      <td>32 bytes or more</td>
+      <td>At <code class="language-plaintext highlighter-rouge">keccak256(p)</code></td>
+      <td>At <code class="language-plaintext highlighter-rouge">p</code> (length * 2 + 1)</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="further-reading">Further reading</h1>
+
+<p>For further information about these topics I recommend the following lectures:</p>
+
+<p><a href="https://certora.com/blog/corruptedMemory.html">https://certora.com/blog/corruptedMemory.html</a>
+<a href="https://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html">https://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html</a></p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-01-24T00:00:00-03:00">January 24, 2022</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Solidity+storage+usage%20https%3A%2F%2Fcodelesstravelled.github.io%2Fethereum%2F2022%2F01%2F24%2FSolidity-storage-usage.html" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fcodelesstravelled.github.io%2Fethereum%2F2022%2F01%2F24%2FSolidity-storage-usage.html" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fcodelesstravelled.github.io%2Fethereum%2F2022%2F01%2F24%2FSolidity-storage-usage.html" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/graph-theory/2022/01/17/Eulers-formula-and-maps.html" class="pagination--pager" title="Planar graphs and maps
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Comments</h4>
+      <section id="utterances-comments"></section>
+    
+</div>
+
+      <script>
+  'use strict';
+
+  (function() {
+    var commentContainer = document.querySelector('#utterances-comments');
+
+    if (!commentContainer) {
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.setAttribute('src', 'https://utteranc.es/client.js');
+    script.setAttribute('repo', 'martinsuarezz/martinsuarezz.github.io');
+    script.setAttribute('issue-term', 'pathname');
+    script.setAttribute('theme', 'github-light');
+    script.setAttribute('crossorigin', 'anonymous');
+
+    commentContainer.appendChild(script);
+  })();
+</script>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/post3header.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/graph-theory/2022/01/17/Eulers-formula-and-maps.html" rel="permalink">Planar graphs and maps
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting.
+
+For example, the following...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/post2header.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/python/z3/riddle/2021/12/04/solving-Einstein-riddle-with-Z3.html" rel="permalink">Solving Einstein riddle with Z3
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Einstein’s five-houses consists, as the title says, of 5 houses. Each house has a certain color. Inside of each house, its owner has a pet, smokes a certain ...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/post1header.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/min-cut/graph/graph-theory/2021/11/23/min-cut-problem-variations.html" rel="permalink">Min-cut problem variations
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Last week I needed to solve a variation of the min-cut problem for flow networks. For those who don’t know about the minimum cut of a flow network, I will gi...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://github.com/martinsuarezz" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2022 The code less travelled. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+    <script>
+  'use strict';
+
+  (function() {
+    var commentContainer = document.querySelector('#utterances-comments');
+
+    if (!commentContainer) {
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.setAttribute('src', 'https://utteranc.es/client.js');
+    script.setAttribute('repo', 'martinsuarezz/martinsuarezz.github.io');
+    script.setAttribute('issue-term', 'pathname');
+    script.setAttribute('theme', 'github-light');
+    script.setAttribute('crossorigin', 'anonymous');
+
+    commentContainer.appendChild(script);
+  })();
+</script>
+
+  
+
+
+
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="text/javascript"
+     src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.8.0/MotionPathPlugin.min.js"></script>
+    <script src="/assets/js/header.js"></script>
+  </body>
+</html>

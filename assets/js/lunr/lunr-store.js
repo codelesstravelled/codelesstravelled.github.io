@@ -16,4 +16,10 @@ var store = [{
         "tags": ["graph","euler","maps","graph-theory"],
         "url": "/graph-theory/2022/01/17/Eulers-formula-and-maps.html",
         "teaser": "/assets/images/post3header.png"
+      },{
+        "title": "Solidity storage usage",
+        "excerpt":"In this post, I will show how Solidity administrates the Ethereum Virtual Machine (EVM) storage. Storage operations are extremely costly so good knowledge is required to optimize gas usage. Ethereum Virtual Machine storage Storage on the EVM could be seen as an array of length 2^256 with each item having...","categories": ["ethereum"],
+        "tags": ["solidity","evm","ethereum"],
+        "url": "/ethereum/2022/01/24/Solidity-storage-usage.html",
+        "teaser": "/assets/images/post4header.png"
       }]

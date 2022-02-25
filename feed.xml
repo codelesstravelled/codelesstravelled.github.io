@@ -1,4 +1,210 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="https://codelesstravelled.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://codelesstravelled.github.io/" rel="alternate" type="text/html" /><updated>2022-01-21T19:02:41-03:00</updated><id>https://codelesstravelled.github.io/feed.xml</id><title type="html">The code less travelled</title><subtitle>In this blog, I will try to mix programming, computer science, mathematics and some interesting stories.</subtitle><entry><title type="html">Planar graphs and maps</title><link href="https://codelesstravelled.github.io/graph-theory/2022/01/17/Eulers-formula-and-maps.html" rel="alternate" type="text/html" title="Planar graphs and maps" /><published>2022-01-17T18:00:00-03:00</published><updated>2022-01-17T18:00:00-03:00</updated><id>https://codelesstravelled.github.io/graph-theory/2022/01/17/Eulers-formula-and-maps</id><content type="html" xml:base="https://codelesstravelled.github.io/graph-theory/2022/01/17/Eulers-formula-and-maps.html">&lt;p&gt;Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="https://codelesstravelled.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://codelesstravelled.github.io/" rel="alternate" type="text/html" /><updated>2022-02-25T01:44:18-03:00</updated><id>https://codelesstravelled.github.io/feed.xml</id><title type="html">The code less travelled</title><subtitle>In this blog, I will try to mix programming, computer science, mathematics and some interesting stories.</subtitle><entry><title type="html">Solidity storage usage</title><link href="https://codelesstravelled.github.io/ethereum/2022/01/24/Solidity-storage-usage.html" rel="alternate" type="text/html" title="Solidity storage usage" /><published>2022-01-24T00:00:00-03:00</published><updated>2022-01-24T00:00:00-03:00</updated><id>https://codelesstravelled.github.io/ethereum/2022/01/24/Solidity-storage-usage</id><content type="html" xml:base="https://codelesstravelled.github.io/ethereum/2022/01/24/Solidity-storage-usage.html">&lt;p&gt;In this post, I will show how Solidity administrates the Ethereum Virtual Machine (EVM) storage. Storage operations are extremely costly so good knowledge is required to optimize gas usage.&lt;/p&gt;
+
+&lt;h1 id=&quot;ethereum-virtual-machine-storage&quot;&gt;Ethereum Virtual Machine storage&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/storage_evm.png&quot; alt=&quot;EVM Storage&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Storage on the EVM could be seen as an array of length 2^256 with each item having a size of 32 bytes.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;A contract running on the EVM has extremely large storage space available. It could be seen as an array of length
+2^256 with each slot having a size of 32 bytes (256 bits).&lt;/p&gt;
+
+&lt;p&gt;Initially, all of this space is blank. For the contract developer, it does not cost any gas to have all of this blank space
+available. However, when you start using this space and filling it with non 0 values, the EVM starts spending gas.&lt;/p&gt;
+
+&lt;p&gt;Storage usage is &lt;strong&gt;extremely costly&lt;/strong&gt; on the EVM. According to the &lt;a href=&quot;https://ethereum.github.io/yellowpaper/paper.pdf&quot;&gt;Yellow Paper&lt;/a&gt;
+these are the gas costs of saving and loading from storage alongside common operations:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Operation&lt;/th&gt;
+      &lt;th&gt;Description&lt;/th&gt;
+      &lt;th&gt;Gas Cost&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;ADD&lt;/td&gt;
+      &lt;td&gt;Addition operation&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;MUL&lt;/td&gt;
+      &lt;td&gt;Addition operation&lt;/td&gt;
+      &lt;td&gt;5&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;AND&lt;/td&gt;
+      &lt;td&gt;Bitwise AND operation&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;MLOAD&lt;/td&gt;
+      &lt;td&gt;Load word from memory&lt;/td&gt;
+      &lt;td&gt;3&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;MSTORE&lt;/td&gt;
+      &lt;td&gt;Store word to memory&lt;/td&gt;
+      &lt;td&gt;5&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;SLOAD&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;Load word from storage&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;2000&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;SSTORE&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;Store word to storage&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;20000&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;As you can see in the last two rows, loading and saving to storage is orders of magnitude higher than other typical operations
+like arithmetic operations, boolean operations, or loading and saving to memory.&lt;/p&gt;
+
+&lt;p&gt;Also, gas refunds are given when you destroy a contract using the SELFDESTRUCT operation or when you set a storage space to 0.
+This further incentivizes to &lt;strong&gt;use storage space as carefully as possible&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Sidenote: the amount of gas that can be refunded is capped to prevent abuses of this system.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;solitidy-storage-usage&quot;&gt;Solitidy storage usage&lt;/h1&gt;
+
+&lt;h2 id=&quot;static-variables&quot;&gt;Static variables&lt;/h2&gt;
+
+&lt;p&gt;Now we will look into how Solidity uses all of the EVM available space when you develop a contract.&lt;/p&gt;
+
+&lt;p&gt;Statically-sized variables (everything but mappings or dynamic arrays) are stored sequentially in memory, starting from position &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Typically each variable uses a 32-byte slot. In case contiguous variables are smaller than 32 bytes Solidity will try to pack them
+into a slot. This follows some rules:&lt;/p&gt;
+
+&lt;div class=&quot;language-solidity highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;contract&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Storage&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x0 lower end
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x0 higher end
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x1
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var1&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var2&lt;/code&gt; will be packed into the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0&lt;/code&gt;, while &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var3&lt;/code&gt; will be stored at the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Variables packing work by putting the first variable at the lowest position of the 32 bytes. In this case, the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0&lt;/code&gt;
+will contain &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var2&lt;/code&gt; in the lowest 128 bits and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var3&lt;/code&gt; in the highest 128 bits:
+&lt;img src=&quot;/assets/images/storage_packed.png&quot; alt=&quot;Packed Storage&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;div class=&quot;language-solidity highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;contract&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Storage&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;uint192&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x0
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x1 lower end
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x1 higher end
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var2&lt;/code&gt; could not be packed with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var1&lt;/code&gt; as their combined size is bigger than 256 bits. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var1&lt;/code&gt; will be
+stored at slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0&lt;/code&gt;. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var2&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var3&lt;/code&gt; will be packed into the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x1&lt;/code&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;div class=&quot;language-solidity highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;contract&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Storage&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;uint192&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x0
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint192&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x1
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x2
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var1&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var2&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;var3&lt;/code&gt; will be each placed in a different slot as no packing is allowed due to size limitations.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Static arrays work similarly, trying to pack lower than 256-bit variables together. However, it is not allowed to pack an array
+variable with another variable.&lt;/p&gt;
+
+&lt;div class=&quot;language-solidity highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;contract&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Storage&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;array&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x0 - 0x1
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint128&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x2
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Here the variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;array&lt;/code&gt; will take 2 storage slots, the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x0&lt;/code&gt; will contain the numbers 1 and 2 and the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x1&lt;/code&gt; will contain the number 3.
+Then, in slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x2&lt;/code&gt; the variable var1 will be placed.&lt;/p&gt;
+
+&lt;p&gt;Structs also try to pack their variables together and, like arrays, prevent their variables from being packed with external variables.&lt;/p&gt;
+
+&lt;h2 id=&quot;dinamic-size-variables&quot;&gt;Dinamic-size variables&lt;/h2&gt;
+
+&lt;p&gt;Mappings and dynamically-sized arrays follow a different behavior. The storage slots of their items are calculated using the Keccak-256 hash function.&lt;/p&gt;
+
+&lt;h3 id=&quot;dynamically-sized-arrays&quot;&gt;Dynamically-sized arrays&lt;/h3&gt;
+
+&lt;p&gt;Arrays locate their data at the position &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;keccak256(p)&lt;/code&gt; with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt; being the slot where the array is declared.&lt;/p&gt;
+
+&lt;div class=&quot;language-solidity highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;contract&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Storage&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;uint256&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;var1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x0
+&lt;/span&gt;  &lt;span class=&quot;kt&quot;&gt;uint256&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;array&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// 0x1 Will contain the array size
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In the previous code, the array data will start at the position &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;keccak256(0x1)&lt;/code&gt; as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x1&lt;/code&gt; is the location of the array declaration. Also, it’s important to note that the position &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x1&lt;/code&gt; will contain the current array size.&lt;/p&gt;
+
+&lt;h3 id=&quot;mappings&quot;&gt;Mappings&lt;/h3&gt;
+
+&lt;p&gt;Mappings work in a similar way as dynamic arrays. They locate their data at the position &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;keccak256(k . p)&lt;/code&gt; with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt; the slot where the array is declared, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;k&lt;/code&gt; the mapping key used, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.&lt;/code&gt; the concatenation operation.&lt;/p&gt;
+
+&lt;p&gt;In contrast to dynamic arrays, the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt; where the mapping is declared is not used for saving data. However, it is necessary so two different mappings that share keys have a different hash distribution.&lt;/p&gt;
+
+&lt;h2 id=&quot;bytes-and-strings&quot;&gt;Bytes and strings&lt;/h2&gt;
+
+&lt;p&gt;Bytes and strings use a particular encoding. If the bytes data/string is at most 31 bytes, Solidity will save this data into a single slot. The data will be placed in the higher-order bytes and use the lowest byte to save its length multiplied by 2.&lt;/p&gt;
+
+&lt;p&gt;Let’s see an example, what happens when we declare the string “hello world!”:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/encoding_bytes.png&quot; alt=&quot;String encoding&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We have the highest bytes with the string content and the lowest byte with its length multiplied by 2, in this case, 12.&lt;/p&gt;
+
+&lt;p&gt;If the data is 32 bytes or longer, then the slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt; where the array was declared will store &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;length * 2 + 1&lt;/code&gt;. The bytes/string will be stored at &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;keccack256(p)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The use of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;length * 2&lt;/code&gt; for data smaller than 32 bytes and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;length * 2 + 1&lt;/code&gt; for data larger or equal than 32 bytes allows identifying a short bytes array/string from a long bytes array/string just by looking at the lowest bit. If it is a 0 will be short, if it is a 1 will be long.&lt;/p&gt;
+
+&lt;p&gt;In conclusion, for a bytes/string declared at slot &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt;:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Bytes/string type&lt;/th&gt;
+      &lt;th&gt;Size&lt;/th&gt;
+      &lt;th&gt;Data location&lt;/th&gt;
+      &lt;th&gt;Data length location&lt;/th&gt;
+      &lt;th&gt;Last bit of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Short&lt;/td&gt;
+      &lt;td&gt;At most 31 bytes&lt;/td&gt;
+      &lt;td&gt;Highest 31 bytes of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt; (left aligned)&lt;/td&gt;
+      &lt;td&gt;Lowest byte of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt; (length * 2)&lt;/td&gt;
+      &lt;td&gt;0&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Long&lt;/td&gt;
+      &lt;td&gt;32 bytes or more&lt;/td&gt;
+      &lt;td&gt;At &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;keccak256(p)&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;At &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;p&lt;/code&gt; (length * 2 + 1)&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h1 id=&quot;further-reading&quot;&gt;Further reading&lt;/h1&gt;
+
+&lt;p&gt;For further information about these topics I recommend the following lectures:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://certora.com/blog/corruptedMemory.html&quot;&gt;https://certora.com/blog/corruptedMemory.html&lt;/a&gt;
+&lt;a href=&quot;https://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html&quot;&gt;https://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><category term="ethereum" /><category term="solidity" /><category term="evm" /><category term="ethereum" /><summary type="html">In this post, I will show how Solidity administrates the Ethereum Virtual Machine (EVM) storage. Storage operations are extremely costly so good knowledge is required to optimize gas usage. Ethereum Virtual Machine storage Storage on the EVM could be seen as an array of length 2^256 with each item having a size of 32 bytes. A contract running on the EVM has extremely large storage space available. It could be seen as an array of length 2^256 with each slot having a size of 32 bytes (256 bits). Initially, all of this space is blank. For the contract developer, it does not cost any gas to have all of this blank space available. However, when you start using this space and filling it with non 0 values, the EVM starts spending gas. Storage usage is extremely costly on the EVM. According to the Yellow Paper these are the gas costs of saving and loading from storage alongside common operations: Operation Description Gas Cost ADD Addition operation 3 MUL Addition operation 5 AND Bitwise AND operation 3 MLOAD Load word from memory 3 MSTORE Store word to memory 5 SLOAD Load word from storage 2000 SSTORE Store word to storage 20000 As you can see in the last two rows, loading and saving to storage is orders of magnitude higher than other typical operations like arithmetic operations, boolean operations, or loading and saving to memory. Also, gas refunds are given when you destroy a contract using the SELFDESTRUCT operation or when you set a storage space to 0. This further incentivizes to use storage space as carefully as possible. Sidenote: the amount of gas that can be refunded is capped to prevent abuses of this system. Solitidy storage usage Static variables Now we will look into how Solidity uses all of the EVM available space when you develop a contract. Statically-sized variables (everything but mappings or dynamic arrays) are stored sequentially in memory, starting from position 0x0. Typically each variable uses a 32-byte slot. In case contiguous variables are smaller than 32 bytes Solidity will try to pack them into a slot. This follows some rules: contract Storage { uint128 var1 = 1; // 0x0 lower end uint128 var2 = 2; // 0x0 higher end uint128 var3 = 3; // 0x1 } Here var1 and var2 will be packed into the slot 0x0, while var3 will be stored at the slot 0x1. Variables packing work by putting the first variable at the lowest position of the 32 bytes. In this case, the slot 0x0 will contain var2 in the lowest 128 bits and var3 in the highest 128 bits: contract Storage { uint192 var1 = 1; // 0x0 uint128 var2 = 2; // 0x1 lower end uint128 var3 = 3; // 0x1 higher end } Here var2 could not be packed with var1 as their combined size is bigger than 256 bits. var1 will be stored at slot 0x0. var2 and var3 will be packed into the slot 0x1 contract Storage { uint192 var1 = 1; // 0x0 uint192 var2 = 2; // 0x1 uint128 var3 = 3; // 0x2 } Here var1, var2, and var3 will be each placed in a different slot as no packing is allowed due to size limitations. Static arrays work similarly, trying to pack lower than 256-bit variables together. However, it is not allowed to pack an array variable with another variable. contract Storage { uint128[3] array = [1, 2, 3]; // 0x0 - 0x1 uint128 var1 = 4; // 0x2 } Here the variable array will take 2 storage slots, the slot 0x0 will contain the numbers 1 and 2 and the slot 0x1 will contain the number 3. Then, in slot 0x2 the variable var1 will be placed. Structs also try to pack their variables together and, like arrays, prevent their variables from being packed with external variables. Dinamic-size variables Mappings and dynamically-sized arrays follow a different behavior. The storage slots of their items are calculated using the Keccak-256 hash function. Dynamically-sized arrays Arrays locate their data at the position keccak256(p) with p being the slot where the array is declared. contract Storage { uint256 var1 = 4; // 0x0 uint256[] array; // 0x1 Will contain the array size } In the previous code, the array data will start at the position keccak256(0x1) as 0x1 is the location of the array declaration. Also, it’s important to note that the position 0x1 will contain the current array size. Mappings Mappings work in a similar way as dynamic arrays. They locate their data at the position keccak256(k . p) with p the slot where the array is declared, k the mapping key used, and . the concatenation operation. In contrast to dynamic arrays, the slot p where the mapping is declared is not used for saving data. However, it is necessary so two different mappings that share keys have a different hash distribution. Bytes and strings Bytes and strings use a particular encoding. If the bytes data/string is at most 31 bytes, Solidity will save this data into a single slot. The data will be placed in the higher-order bytes and use the lowest byte to save its length multiplied by 2. Let’s see an example, what happens when we declare the string “hello world!”: We have the highest bytes with the string content and the lowest byte with its length multiplied by 2, in this case, 12. If the data is 32 bytes or longer, then the slot p where the array was declared will store length * 2 + 1. The bytes/string will be stored at keccack256(p). The use of length * 2 for data smaller than 32 bytes and length * 2 + 1 for data larger or equal than 32 bytes allows identifying a short bytes array/string from a long bytes array/string just by looking at the lowest bit. If it is a 0 will be short, if it is a 1 will be long. In conclusion, for a bytes/string declared at slot p: Bytes/string type Size Data location Data length location Last bit of p Short At most 31 bytes Highest 31 bytes of p (left aligned) Lowest byte of p (length * 2) 0 Long 32 bytes or more At keccak256(p) At p (length * 2 + 1) 1 Further reading For further information about these topics I recommend the following lectures: https://certora.com/blog/corruptedMemory.html https://docs.soliditylang.org/en/v0.8.11/internals/layout_in_storage.html</summary></entry><entry><title type="html">Planar graphs and maps</title><link href="https://codelesstravelled.github.io/graph-theory/2022/01/17/Eulers-formula-and-maps.html" rel="alternate" type="text/html" title="Planar graphs and maps" /><published>2022-01-17T18:00:00-03:00</published><updated>2022-01-17T18:00:00-03:00</updated><id>https://codelesstravelled.github.io/graph-theory/2022/01/17/Eulers-formula-and-maps</id><content type="html" xml:base="https://codelesstravelled.github.io/graph-theory/2022/01/17/Eulers-formula-and-maps.html">&lt;p&gt;Typically, maps can be represented by planar graphs. Planar graphs are graphs that can be drawn without their edges intersecting.&lt;/p&gt;
 
 &lt;p&gt;For example, the following is a planar graph:&lt;/p&gt;
 
